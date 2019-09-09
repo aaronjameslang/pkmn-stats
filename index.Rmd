@@ -1,12 +1,19 @@
 ---
-title: "Pokémon Stats"
-output: 
-  html_notebook: 
+title: Pokémon Statistics
+author: Aaron Lang
+output:
+  html_document:
+    code_folding: hide
+    df_print: kable
+    toc: yes
+    toc_float: true
+  html_notebook:
     code_folding: hide
     toc: yes
+    toc_float: true
 ---
 
-```{r}
+```{r include=FALSE}
 library(dplyr)
 library(ggplot2)
 pokemon <- read.csv(file = "pokemon.csv")
