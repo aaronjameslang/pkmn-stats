@@ -1,0 +1,54 @@
+---
+title: "Pokémon Stats"
+output: 
+  html_notebook: 
+    code_folding: hide
+    toc: yes
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+pokemon <- read.csv(file = "pokemon.csv")
+```
+
+# Height
+
+```{r}
+summary(pokemon$height_m)
+```
+```{r}
+pokemon %>% arrange(height_m) %>% head %>% select(generation, pokedex_number, name, height_m)
+pokemon %>% arrange(-height_m) %>% head %>% select(generation, pokedex_number, name, height_m)
+```
+```{r}
+ggplot(pokemon, aes(height_m)) + geom_density() + scale_x_log10()
+```
+
+
+# Weight
+
+```{r}
+summary(pokemon$weight_kg)
+```
+```{r}
+pokemon %>% arrange(weight_kg) %>% head %>% select(generation, pokedex_number, name, weight_kg)
+pokemon %>% arrange(-weight_kg) %>% head %>% select(generation, pokedex_number, name, weight_kg)
+```
+```{r}
+ggplot(pokemon, aes(weight_kg)) + geom_density() + scale_x_log10()
+```
+
+# Density
+
+```{r}
+pokemon <- pokemon %>% mutate(density = weight_kg/height_m)
+summary(pokemon$density)
+```
+```{r}
+pokemon %>% arrange(density) %>% head %>% select(generation, pokedex_number, name, density)
+pokemon %>% arrange(-density) %>% head %>% select(generation, pokedex_number, name, density)
+```
+```{r}
+ggplot(pokemon, aes(density)) + geom_density() + scale_x_log10()
+```
