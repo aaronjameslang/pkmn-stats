@@ -59,3 +59,17 @@ pokemon %>% arrange(-density) %>% head %>% select(generation, pokedex_number, na
 ```{r}
 ggplot(pokemon, aes(density)) + geom_density() + scale_x_log10()
 ```
+
+# Body Mass Index (BMI)
+
+```{r}
+pokemon <- pokemon %>% mutate(bmi = weight_kg/(height_m^2))
+summary(pokemon$bmi)
+```
+```{r}
+pokemon %>% arrange(bmi) %>% head %>% select(generation, pokedex_number, name, bmi)
+pokemon %>% arrange(-bmi) %>% head %>% select(generation, pokedex_number, name, bmi)
+```
+```{r}
+ggplot(pokemon, aes(bmi)) + geom_density() + scale_x_log10()
+```
