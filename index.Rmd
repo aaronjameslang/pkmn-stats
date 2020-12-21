@@ -2,27 +2,154 @@
 title: Pokémon Statistics
 author: Aaron Lang
 output:
+  html_notebook:
+    code_folding: hide
+    toc: yes
+    toc_float: true
   html_document:
     code_folding: hide
     df_print: kable
     toc: yes
     toc_float: true
-  html_notebook:
-    code_folding: hide
-    toc: yes
-    toc_float: true
 ---
+
+- Descriptive statistics involves analysing and plotting data
+- Inferential statistics allows us to infer information about some population from a sample
+
+- μ : Population mean
+- σ : Population standard deviation
+- x- : Sample mean
+- s : Sample s.d.
+
+- Analysing height is 1D
+- Analysing height against type is 2D
+
+### Variable Types
+
+- Continuos numeric
+  - Height
+  - Weight
+- Discrete numeric
+  - Number of species with type
+  - Number of species in family
+- Nominal categorical
+  - Type
+  - Attack > Defense
+- Ordinal categorical
+  - Evolution level
+  - Evolution level relative to family mean
+  - Generation
+
+Indentifying the var type informs analysis and graphing:
+
+    Linear regression if the outcome is continuous numeric
+
+    Logistic regression if the outcome is dichotomous
+
+    Multinomial regression if the outcome is nominal categorical
+
+    Proportional odds logistic regression if the outcome is ordinal categorical
+
+    Poisson or negative binomial regression if the outcome is a count or frequency
+
+    Cox proportional hazards model (or accelerated failure time models) if the outcome is a censored time-to-event e.g. survival time.
+
+Skewed distributions are poorly described by mean and sd, better by median and IQR
+
 
 ```{r include=FALSE}
 library(dplyr)
 library(ggplot2)
+library(moments)
 pokemon <- read.csv(file = "pokemon.csv")
+pokemon$is_legendary <- as.logical(pokemon$is_legendary)
+```
+## Categorical Data
+
+Let's look at legends and generation
+
+First, generation:
+
+```{r}
+pokemon <- pokemon %>% mutate(type_count = ifelse(type2 == '', 1, 2))
+# pokemon %>% head %>% select(name, type1, type2, type_count)
+table(pokemon$generation)
+ggplot(pokemon, aes(generation)) + geom_bar()
+barplot(table(pokemon$generation))
+```
+Now legends
+```{r}
+pokemon <- pokemon %>% mutate(gender_is_na = is.na(percentage_male))
+table_is_legendary = table(pokemon$is_legendary)
+table_is_legendary
+prop.table(table_is_legendary)
+```
+And both together
+```{r}
+table_2way = table(pokemon$generation, pokemon$is_legendary)
+table_2way
+```
+This doesn't make it very easy to compare across generations, so we can try this
+```{r}
+tmp = table_2way * 100
+tmp = apply(tmp, 2, function(x) sprintf('%.1f%%', x))
+dimnames(tmp) =  list(1:7, c(FALSE, TRUE))
+tmp
+```
+```{r}
+mosaicplot(table_2way, dir=c("v","h"))
+barplot(table(pokemon$is_legendary, pokemon$generation))
+```
+## Continous Data
+```{r}
+hist(pokemon$hp)
+plot(density(pokemon$hp))
+hist(pokemon$percentage_male)
+#plot(density(pokemon$percentage_male))
+```
+## Continuos x Categorical data (Bivariate)
+
+```{r}
+boxplot(data = pokemon, speed ~ generation)
+boxplot(data = pokemon, weight_kg ~ generation)
 ```
 
+## Continuos * Continuos
+
+```{r}
+plot(pokemon$height_m, pokemon$weight_kg)
+plot(pokemon$attack, pokemon$defense)
+gen1 = pokemon %>% filter(generation == 1)
+plot(gen1$height_m, gen1$weight_kg)
+plot(gen1$attack, gen1$defense)
+pairs(data=gen1, ~attack+defense+speed+hp)
+library(car)
+scatterplotMatrix(~attack+defense+speed+hp, data=gen1)
+```
+Covariance is the means of the product of the differences
+```{r}
+mean_attack = mean(gen1$attack)
+sd_attack = sd(gen1$attack)
+mean_defense = mean(gen1$defense)
+sd_defense = sd(gen1$defense)
+gen1$attack_sub_mean = gen1$attack - mean_attack
+gen1$defense_sub_mean = gen1$defense - mean_defense
+products = gen1$attack_sub_mean * gen1$defense_sub_mean
+covn = mean(products)
+covn1 = sum(products)/(nrow(gen1) - 1)
+covn # 401.6
+covn1 # 404.29
+cov(gen1$attack, gen1$defense) # 404.29
+covn1/(sd_attack*sd_defense) # pearson 0.464
+cor(gen1$attack, gen1$defense) # pearson 0.464
+```
 # Height
 
 ```{r}
 summary(pokemon$height_m)
+sd(pokemon$height_m, na.rm = TRUE)
+skewness(pokemon$height_m, na.rm = TRUE)
+kurtosis(pokemon$height_m, na.rm = TRUE)
 ```
 ```{r}
 pokemon %>% arrange(height_m) %>% head %>% select(generation, pokedex_number, name, height_m)
